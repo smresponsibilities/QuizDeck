@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';    
+import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -14,7 +14,7 @@ const userSchema = new Schema({
   },
   email: {
     type: String,
-    required: false,
+    required: true,
     unique: true,
     trim: true
   },
@@ -23,7 +23,6 @@ const userSchema = new Schema({
     default: Date.now
   }
 });
-
 
 const User = mongoose.model('User', userSchema);
 
