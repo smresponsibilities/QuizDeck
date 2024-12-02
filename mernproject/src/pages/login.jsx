@@ -4,8 +4,8 @@ import Card from "../components/card"
 export default function Login() {
 
     return (
-      <div className="flex align-center justify-center h-screen p-20 skew-y-6">
-        <Card  >
+      <div className="flex fl align-center justify-center h-screen p-20 skew-y-6 ">
+        <Card>
             <LoginForm />
         </Card>
 

@@ -9,9 +9,9 @@ export default function LoginForm() {
         password confirmation -string
         submit -button */}
 
-        <form className="flex flex-col ">
+        <form className="flex flex-col gap-1 ">
             
-            <label htmlFor="UserName">UserName</label>
+            <label htmlFor="UserName">Username</label>
             <input type="text" id="username" name="username" />
 
 
@@ -19,7 +19,7 @@ export default function LoginForm() {
             <input type="password" id="password" name="password" />
 
 
-            <button type="submit">Submit</button>
+            <button type="submit">Login</button>
             <button type="submit">Forget Password</button>
 
 
