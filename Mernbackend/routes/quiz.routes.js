@@ -4,7 +4,7 @@ import { createQuizHandler,saveQuizHandler } from "../controllers/quiz.controlle
 
 const router = Router();
 
-router.post("/createquiz", authMiddleware, createQuizHandler);
+router.post("/createquiz", authMiddleware, saveQuizHandler);
 router.post("/savequiz", authMiddleware, createQuizHandler);
 
 export default router;

@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Separator } from "@/components/ui/separator"
 import { PlusCircle, Pencil, Trash2, Save } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
+ import  {SaveQuizHandler } from "@/components/services/quiztobackend.js"
 // import { useToast } from "@/hooks/use-toast"
 
 const COLORS = {
@@ -82,7 +83,7 @@ export default function QuizCreator() {
     }
   }
 
-  const handleSaveQuiz = async () => {
+  const saveQuiz = async () => {
     if (quizName.trim() === "") {
       toast({
         title: "Error",
@@ -102,7 +103,7 @@ export default function QuizCreator() {
     }
 
     try {
-      await saveQuiz({ quizname: quizName, questions })
+      await SaveQuizHandler ({ quizname: quizName, questions })
       toast({
         title: "Success",
         description: "Quiz saved successfully!",
@@ -246,7 +247,7 @@ export default function QuizCreator() {
         </CardContent>
         <CardFooter>
           <Button 
-            onClick={handleSaveQuiz} 
+            onClick={saveQuiz} 
             className="w-full transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg"
           >
             <Save className="w-4 h-4 mr-2" />

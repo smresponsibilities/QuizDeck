@@ -32,8 +32,8 @@ const quizSchema = new Schema({
             }],
             validate: [optionLimit, '{PATH} must have exactly 4 options']
         }
-    }],
-    validate: [questionLimit, '{PATH} must have at least 1 question']
+    }]//,
+    // validate: [questionLimit, ' must have at least 1 question']
 });
 
 function optionLimit(val) {
