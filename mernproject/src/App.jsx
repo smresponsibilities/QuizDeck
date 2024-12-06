@@ -6,6 +6,7 @@ import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import { Route, Routes } from "react-router";
 import QuizApp from "./pages/test";
+import Quiz from "./pages/quiz";
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/test" element={<QuizApp />} />
+      <Route path="/createquiz" element={< Quiz/>} />
+      
     </Routes>
   );
 }
