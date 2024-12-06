@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { ApiResponse } from "../utils/apiResponse.js";
 
 export const signup = async (req, res) => {
   try {
@@ -20,9 +21,7 @@ export const signup = async (req, res) => {
         email: email,
       });
       const token = jwt.sign({ username, email }, process.env.JWT_SECRET);
-      res
-        .status(200)
-        .json({ message: "User created", success: true, data: { token } });
+      res.status(200).json(new ApiResponse(200, token, "User Registered"));
     }
   } catch (err) {
     res.status(500).json({
@@ -46,11 +45,14 @@ export const signin = async (req, res) => {
       const match = await bcrypt.compare(password, user.password);
       // console.log(2, match);
       if (match) {
-        const token = jwt.sign({ username:user.username, email }, process.env.JWT_SECRET);
+        const token = jwt.sign(
+          { username: user.username, email },
+          process.env.JWT_SECRET
+        );
         // console.log(3, token);
         res
           .status(200)
-          .json({ message: "User logged in", success: true, data: { token } });
+          .json(new ApiResponse(200, token, "User Loggedin"));
       } else {
         res
           .status(401)
