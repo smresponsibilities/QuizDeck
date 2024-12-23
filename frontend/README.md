@@ -1,5 +1,16 @@
 # Kahoot Clone - Frontend
 
+## Table of Contents
+
+1. [Description](#description)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Features](#features)
+6. [Testing](#testing)
+7. [Troubleshooting](#troubleshooting)
+8. [Additional Information](#additional-information)
+
 ## Description
 
 This is the frontend part of the Kahoot Clone project. It is built with React and provides a dynamic and responsive user interface. Users can create quizzes, participate in real-time quiz sessions, and view leaderboards. The frontend communicates with the backend via API requests and WebSockets for real-time updates.

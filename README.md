@@ -1,5 +1,16 @@
 # Kahoot Clone
 
+## Table of Contents
+
+1. [Description](#description)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Usage](#usage)
+6. [Features](#features)
+7. [Testing](#testing)
+8. [Troubleshooting](#troubleshooting)
+
 ## Description
 
 This project is a MERN stack application that serves as a clone of the popular quiz platform Kahoot. It includes a MongoDB database, Express.js server, React frontend, and Node.js backend. Users can create quizzes, participate in real-time quiz sessions, and view leaderboards. The application is designed to be scalable and secure, providing a seamless experience for users. The frontend is built with React, providing a dynamic and responsive user interface. The backend is built with Express.js, ensuring robust and efficient handling of API requests. MongoDB is used as the database to store user data, quiz information, and real-time scores. The application also incorporates WebSockets for real-time communication, allowing users to receive instant updates during quiz sessions. The project follows best practices for security, including JWT for authentication, input validation, and secure password storage. The application is optimized for performance, with lazy loading of components and efficient state management. It also includes a comprehensive CI/CD pipeline for automated testing and deployment, ensuring high code quality and reliability.
@@ -32,26 +43,34 @@ cd backend
 npm install
 ```
 
-4. Install frontend dependencies:
+```env
+MONGODB_URI=YOUR_MONGODB_URI
+JWT_SECRET=YOUR_JWT_SECRET
+PORT=5000
+```
 
 ```bash
 cd frontend
 npm install
 ```
 
-## Configuration
+1. Start the backend server:
 
 1. Create a `.env` file in the `backend` directory and add the following environment variables:
 
 ```env
 MONGODB_URI=YOUR_MONGODB_URI
 JWT_SECRET=YOUR_JWT_SECRET
-PORT=YOUR_PORT
+PORT=5000
 ```
 
 ## Usage
 
-1. Start the backend server:
+```env
+MONGODB_URI=YOUR_MONGODB_URI
+JWT_SECRET=YOUR_JWT_SECRET
+PORT=5000
+```
 
 ```bash
 cd backend
@@ -65,7 +84,7 @@ cd frontend
 npm run dev
 ```
 
-3. Open your browser and navigate to `http://localhost:3000`.
+3. Open your browser and navigate to `http://localhost:5173`.
 
 ## Features
 
@@ -104,7 +123,7 @@ npm test
 2. Run frontend tests:
 
 ```bash
-cd ../frontend
+cd frontend
 npm test
 ```
 
@@ -125,12 +144,12 @@ npm install -g create-react-app
 npm install -g create-react-app
 ```
 
-- If you encounter issues with MongoDB, ensure that the MongoDB service is running and accessible. Check the connection string in the `.env` file.
+- If you encounter issues with user authentication, ensure that the JWT tokens are being generated and validated correctly.
+- For issues with quiz creation and editing, ensure that the input validation is working as expected.
 
 2. Deploy the backend and frontend to your preferred hosting service. Ensure that the environment variables are set correctly on the hosting platform.
 
-- If you encounter issues with user authentication, ensure that the JWT tokens are being generated and validated correctly.
-- For issues with quiz creation and editing, ensure that the input validation is working as expected.
+3. Configure a reverse proxy (e.g., Nginx) to route requests to the backend and frontend servers.
 
 2. Deploy the backend and frontend to your preferred hosting service. Ensure that the environment variables are set correctly on the hosting platform.
 3. Configure a reverse proxy (e.g., Nginx) to route requests to the backend and frontend servers.
@@ -148,4 +167,5 @@ cd frontend
 npm run build
 ```
 
-3. Configure a reverse proxy (e.g., Nginx) to route requests to the backend and frontend servers.
+- If you encounter issues with user authentication, ensure that the JWT tokens are being generated and validated correctly.
+- For issues with quiz creation and editing, ensure that the input validation is working as expected.
