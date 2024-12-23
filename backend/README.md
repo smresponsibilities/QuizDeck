@@ -1,5 +1,17 @@
 # Kahoot Clone - Backend
 
+## Table of Contents
+
+1. [Description](#description)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Usage](#usage)
+6. [Features](#features)
+7. [Testing](#testing)
+8. [Troubleshooting](#troubleshooting)
+9. [Additional Information](#additional-information)
+
 ## Description
 
 This is the backend part of the Kahoot Clone project. It is built with Express.js and handles all API requests, user authentication, and real-time communication using WebSockets. It also manages the database interactions with MongoDB, ensuring data consistency and integrity.
