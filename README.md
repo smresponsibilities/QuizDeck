@@ -104,7 +104,7 @@ npm test
 2. Run frontend tests:
 
 ```bash
-cd ../frontend
+cd frontend
 npm test
 ```
 
