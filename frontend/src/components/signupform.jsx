@@ -7,7 +7,7 @@ export default function SignUpForm() {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    const response = await axios.post("http://localhost:8080/user/signup", {
+    const response = await axios.post("http://localhost:3000/user/signup", {
       username,
       email,
       password,

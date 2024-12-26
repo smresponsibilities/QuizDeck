@@ -5,7 +5,7 @@ export const generateRoomId = () => {
 };
 
 export const validateRoomData = (quizData) => {
-  if (!quizData || !quizData.title || !quizData.questions) {
+  if (!quizData || !quizData.quizname || !quizData.questions) {
     throw new Error("Invalid quiz data");
   }
   return true;

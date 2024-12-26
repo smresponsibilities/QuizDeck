@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import Quiz from "./quiz.model.js";
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -6,24 +7,26 @@ const userSchema = new Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    Selection: false,
   },
   email: {
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
+  quizzes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Quiz" }],
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 export default User;

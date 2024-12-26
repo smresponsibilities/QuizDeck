@@ -8,6 +8,11 @@ import {
   handleSubmitAnswer,
 } from "../controllers/socket.controller.js";
 
+/**
+ * Initializes the socket.io service
+ * @param {import('http').Server} server - The HTTP server instance
+ * @returns {Server} Initialized Socket.IO server
+ */
 export const initSocketService = (server) => {
   const io = new Server(server, {
     cors: {
@@ -16,32 +21,29 @@ export const initSocketService = (server) => {
     },
     connectionStateRecovery: {
       maxDisconnectionDuration: 2000,
+      skipMiddlewares: true,
     },
   });
 
+  // Handle client connections
   io.on("connection", (socket) => {
-    console.log("New client connected", socket.id);
+    console.log("Client connected:", socket.id);
 
-    // Create Room Event
+    // Socket event handlers
     socket.on("create-room", (quizData) =>
       handleCreateRoom(socket, io, quizData)
     );
 
-    // Join Room Event
     socket.on("join-room", (roomId) => handleJoinRoom(socket, io, roomId));
 
-    // Start Quiz Event
     socket.on("start-quiz", (roomId) => handleStartQuiz(socket, io, roomId));
 
-    // Submit Answer Event
     socket.on("submit-answer", (data) => handleSubmitAnswer(socket, io, data));
 
-    // Next Question Event
     socket.on("next-question", (roomId) =>
       handleNextQuestion(socket, io, roomId)
     );
 
-    // Disconnect handling
     socket.on("disconnect", () => handleDisconnect(socket, io));
   });
 

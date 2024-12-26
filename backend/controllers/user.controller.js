@@ -20,7 +20,10 @@ export const signup = async (req, res) => {
         password: hashed,
         email: email,
       });
-      const token = jwt.sign({ username, email }, process.env.JWT_SECRET);
+      const token = jwt.sign(
+        { _id: savedUser._id, username, email },
+        process.env.JWT_SECRET
+      );
       res.status(200).json(new ApiResponse(200, token, "User Registered"));
     }
   } catch (err) {
@@ -38,7 +41,7 @@ export const signin = async (req, res) => {
     const password = req.body.password;
 
     const user = await User.findOne({ email });
-    // console.log(1);
+    // console.log(user._id);
     if (!user) {
       res.status(401).json({ message: "User does not exist", success: false });
     } else {
@@ -46,13 +49,11 @@ export const signin = async (req, res) => {
       // console.log(2, match);
       if (match) {
         const token = jwt.sign(
-          { username: user.username, email },
+          { _id: user._id, username: user.username, email },
           process.env.JWT_SECRET
         );
         // console.log(3, token);
-        res
-          .status(200)
-          .json(new ApiResponse(200, token, "User Loggedin"));
+        res.status(200).json(new ApiResponse(200, token, "User Logged In"));
       } else {
         res
           .status(401)
@@ -60,6 +61,7 @@ export const signin = async (req, res) => {
       }
     }
   } catch (err) {
+    console.log(err);
     res.status(500).json({
       message: "Error logging in",
       success: false,

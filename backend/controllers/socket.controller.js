@@ -1,3 +1,5 @@
+// socket.controller.js
+
 import {
   createRoom,
   deleteRoom,
@@ -12,9 +14,11 @@ export const handleCreateRoom = (socket, io, quizData) => {
   try {
     const roomId = createRoom(socket.id, quizData);
     socket.join(roomId);
+    console.log("Room created with ID:", roomId);
     socket.emit("room-created", roomId);
   } catch (error) {
-    socket.emit("room-error", error.message);
+    console.error("Error creating room:", error.message);
+    socket.emit("room-error", { message: error.message });
   }
 };
 
@@ -23,16 +27,11 @@ export const handleJoinRoom = (socket, io, roomId) => {
     const quizInfo = joinRoom(roomId, socket.id);
     socket.join(roomId);
 
-    // Notify host about new player
     const rooms = getRooms();
-    const hostSocketId = rooms[roomId].host;
-
-    const hostSocket = Array.from(io.sockets.sockets.values()).find(
-      (s) => s.id === hostSocketId
-    );
-
-    if (hostSocket) {
-      hostSocket.emit("player-joined", {
+    const hostSocketId = rooms[roomId]?.host;
+    if (hostSocketId) {
+      const hostSocket = io.sockets.sockets.get(hostSocketId);
+      hostSocket?.emit("player-joined", {
         playerId: socket.id,
         playerCount: rooms[roomId].players.length,
       });
@@ -40,40 +39,34 @@ export const handleJoinRoom = (socket, io, roomId) => {
 
     socket.emit("join-successful", { roomId, quiz: quizInfo });
   } catch (error) {
-    socket.emit("join-error", error.message);
+    console.error("Error joining room:", error.message);
+    socket.emit("join-error", { message: error.message });
   }
 };
 
 export const handleStartQuiz = (socket, io, roomId) => {
   try {
     const firstQuestion = startQuiz(roomId, socket.id);
-
-    io.to(roomId).emit("next-question", {
-      questionText: firstQuestion.text,
-      options: firstQuestion.options,
-      timeLimit: firstQuestion.timeLimit || 30,
-    });
+    io.to(roomId).emit("next-question", firstQuestion);
   } catch (error) {
-    socket.emit("quiz-error", error.message);
+    console.error("Error starting quiz:", error.message);
+    socket.emit("quiz-error", { message: error.message });
   }
 };
 
 export const handleSubmitAnswer = (socket, io, { roomId, answerId }) => {
   try {
-    const answerResult = submitAnswer(roomId, socket.id, answerId);
+    const result = submitAnswer(roomId, socket.id, answerId);
 
     const rooms = getRooms();
-    const hostSocketId = rooms[roomId].host;
-
-    const hostSocket = Array.from(io.sockets.sockets.values()).find(
-      (s) => s.id === hostSocketId
-    );
-
-    if (hostSocket) {
-      hostSocket.emit("player-answered", answerResult);
+    const hostSocketId = rooms[roomId]?.host;
+    if (hostSocketId) {
+      const hostSocket = io.sockets.sockets.get(hostSocketId);
+      hostSocket?.emit("player-answered", result);
     }
   } catch (error) {
-    socket.emit("answer-error", error.message);
+    console.error("Error submitting answer:", error.message);
+    socket.emit("answer-error", { message: error.message });
   }
 };
 
@@ -82,46 +75,34 @@ export const handleNextQuestion = (socket, io, roomId) => {
     const nextQuestion = nextQuestion(roomId, socket.id);
 
     if (nextQuestion) {
-      io.to(roomId).emit("next-question", {
-        questionText: nextQuestion.text,
-        options: nextQuestion.options,
-        timeLimit: nextQuestion.timeLimit || 30,
-      });
+      io.to(roomId).emit("next-question", nextQuestion);
     } else {
-      // Quiz ended, send final scores
       const finalScores = getRoomScores(roomId);
       io.to(roomId).emit("quiz-ended", finalScores);
     }
   } catch (error) {
-    socket.emit("quiz-error", error.message);
+    console.error("Error progressing to next question:", error.message);
+    socket.emit("quiz-error", { message: error.message });
   }
 };
 
 export const handleDisconnect = (socket, io) => {
-  // Find and handle rooms where this socket was involved
   const rooms = getRooms();
-
   Object.keys(rooms).forEach((roomId) => {
     const room = rooms[roomId];
+    if (!room) return;
 
     if (room.host === socket.id) {
-      // If host disconnects, end the room
       io.to(roomId).emit("host-disconnected");
       deleteRoom(roomId);
-    } else {
-      // Remove player from room
+    } else if (room.players.includes(socket.id)) {
       removePlayerFromRoom(roomId, socket.id);
 
-      const hostSocket = Array.from(io.sockets.sockets.values()).find(
-        (s) => s.id === room.host
-      );
-
-      if (hostSocket) {
-        hostSocket.emit("player-left", {
-          playerId: socket.id,
-          playerCount: room.players.length,
-        });
-      }
+      const hostSocket = io.sockets.sockets.get(room.host);
+      hostSocket?.emit("player-left", {
+        playerId: socket.id,
+        playerCount: room.players.length,
+      });
     }
   });
 };

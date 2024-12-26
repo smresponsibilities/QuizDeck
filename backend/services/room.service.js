@@ -4,7 +4,6 @@ const quizRooms = {};
 
 export const createRoom = (hostId, quizData) => {
   validateRoomData(quizData);
-
   const roomId = generateRoomId();
 
   quizRooms[roomId] = {
@@ -16,6 +15,7 @@ export const createRoom = (hostId, quizData) => {
     isQuizStarted: false,
   };
 
+  console.log("Room created with data: ", quizRooms[roomId]);
   return roomId;
 };
 
@@ -33,8 +33,9 @@ export const joinRoom = (roomId, playerId) => {
   room.players.push(playerId);
   room.scores[playerId] = 0;
 
+  console.log(`Player ${playerId} joined room ${roomId}`);
   return {
-    title: room.quiz.title,
+    quizname: room.quiz.quizname,
     totalQuestions: room.quiz.questions.length,
   };
 };
@@ -47,7 +48,7 @@ export const startQuiz = (roomId, hostId) => {
   }
 
   if (room.host !== hostId) {
-    throw new Error("Only host can start the quiz");
+    throw new Error("Only the host can start the quiz");
   }
 
   room.isQuizStarted = true;
@@ -55,7 +56,7 @@ export const startQuiz = (roomId, hostId) => {
   return room.quiz.questions[room.currentQuestionIndex];
 };
 
-export const submitAnswer = (roomId, playerId, answerId) => {
+export const submitAnswer = (roomId, playerId, answerIndex) => {
   const room = quizRooms[roomId];
 
   if (!room) {
@@ -64,14 +65,16 @@ export const submitAnswer = (roomId, playerId, answerId) => {
 
   const currentQuestion = room.quiz.questions[room.currentQuestionIndex];
 
-  if (answerId === currentQuestion.correctOptionId) {
+  const isCorrect = currentQuestion.options[answerIndex]?.isAnswer;
+
+  if (isCorrect) {
     room.scores[playerId] += 1;
   }
 
   return {
     playerId,
-    answerId,
-    isCorrect: answerId === currentQuestion.correctOptionId,
+    answerIndex,
+    isCorrect,
   };
 };
 
@@ -83,37 +86,46 @@ export const nextQuestion = (roomId, hostId) => {
   }
 
   if (room.host !== hostId) {
-    throw new Error("Only host can progress to next question");
+    throw new Error("Only the host can progress to the next question");
   }
 
   room.currentQuestionIndex++;
 
   if (room.currentQuestionIndex < room.quiz.questions.length) {
     return room.quiz.questions[room.currentQuestionIndex];
+  } else {
+    // Quiz ended
+    return null;
   }
-
-  return null; // Quiz ended
 };
 
 export const getRoomScores = (roomId) => {
   const room = quizRooms[roomId];
-  return room ? room.scores : {};
-};
 
-export const getRoomByHostId = (hostId) => {
-  return Object.values(quizRooms).find((room) => room.host === hostId);
+  if (!room) {
+    throw new Error("Room does not exist");
+  }
+
+  return room.scores;
 };
 
 export const removePlayerFromRoom = (roomId, playerId) => {
   const room = quizRooms[roomId];
-  if (room) {
-    room.players = room.players.filter((id) => id !== playerId);
-    delete room.scores[playerId];
-  }
+  if (!room) return;
+
+  room.players = room.players.filter((id) => id !== playerId);
+  delete room.scores[playerId];
+
+  console.log(`Player ${playerId} removed from room ${roomId}`);
 };
 
 export const deleteRoom = (roomId) => {
-  delete quizRooms[roomId];
+  if (quizRooms[roomId]) {
+    delete quizRooms[roomId];
+    console.log(`Room ${roomId} deleted`);
+  } else {
+    console.warn(`Attempted to delete non-existent room ${roomId}`);
+  }
 };
 
 export const getRooms = () => quizRooms;

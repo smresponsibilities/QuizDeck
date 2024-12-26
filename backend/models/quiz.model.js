@@ -44,6 +44,6 @@ function questionLimit(val) {
     return val.length ===1 ;
 }
 
-const quiz = mongoose.model('quiz', quizSchema);
+const Quiz = mongoose.model('quiz', quizSchema);
 
-export default quiz;
+export default Quiz;

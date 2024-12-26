@@ -6,6 +6,7 @@ import http from "http";
 import userRouter from "./routes/user.routes.js";
 import quizRouter from "./routes/quiz.routes.js";
 import { initSocketService } from "./services/socket.service.js";
+import morgan from "morgan";
 
 const quizRooms = {};
 
@@ -18,7 +19,7 @@ initSocketService(server);
 
 app.use(express.json());
 app.use(cors());
-
+app.use(morgan("dev"));
 app.use("/user", userRouter);
 app.use("/quiz", quizRouter);
 

@@ -11,7 +11,7 @@ import Quiz from "./pages/quiz";
 function App() {
   return (
     <Routes>
-      <Route index element={<LandingPage />} />
+      <Route path="/" index element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/test" element={<QuizApp />} />
