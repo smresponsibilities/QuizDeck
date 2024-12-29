@@ -35,6 +35,7 @@ export const handleJoinRoom = (socket, io, roomId) => {
         playerId: socket.id,
         playerCount: rooms[roomId].players.length,
       });
+      io.to(roomId).emit('users-count', rooms[roomId].players.length);
     }
 
     socket.emit("join-successful", { roomId, quiz: quizInfo });
@@ -44,10 +45,9 @@ export const handleJoinRoom = (socket, io, roomId) => {
   }
 };
 
-export const handleStartQuiz = (socket, io, roomId) => {
+export const handleStartQuiz = (socket, io, { roomId, question }) => {
   try {
-    const firstQuestion = startQuiz(roomId, socket.id);
-    io.to(roomId).emit("next-question", firstQuestion);
+    io.to(roomId).emit('question-changed', question);
   } catch (error) {
     console.error("Error starting quiz:", error.message);
     socket.emit("quiz-error", { message: error.message });
@@ -70,16 +70,9 @@ export const handleSubmitAnswer = (socket, io, { roomId, answerId }) => {
   }
 };
 
-export const handleNextQuestion = (socket, io, roomId) => {
+export const handleNextQuestion = (socket, io, { roomId, question }) => {
   try {
-    const nextQuestion = nextQuestion(roomId, socket.id);
-
-    if (nextQuestion) {
-      io.to(roomId).emit("next-question", nextQuestion);
-    } else {
-      const finalScores = getRoomScores(roomId);
-      io.to(roomId).emit("quiz-ended", finalScores);
-    }
+    io.to(roomId).emit('question-changed', question);
   } catch (error) {
     console.error("Error progressing to next question:", error.message);
     socket.emit("quiz-error", { message: error.message });

@@ -36,13 +36,11 @@ export const initSocketService = (server) => {
 
     socket.on("join-room", (roomId) => handleJoinRoom(socket, io, roomId));
 
-    socket.on("start-quiz", (roomId) => handleStartQuiz(socket, io, roomId));
+    socket.on("start-quiz", (data) => handleStartQuiz(socket, io, data));
 
     socket.on("submit-answer", (data) => handleSubmitAnswer(socket, io, data));
 
-    socket.on("next-question", (roomId) =>
-      handleNextQuestion(socket, io, roomId)
-    );
+    socket.on("next-question", (data) => handleNextQuestion(socket, io, data));
 
     socket.on("disconnect", () => handleDisconnect(socket, io));
   });

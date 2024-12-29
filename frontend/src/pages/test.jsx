@@ -11,6 +11,8 @@ const QuizApp = () => {
     const [quizData, setQuizData] = useState(null);
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [usersCount, setUsersCount] = useState(0);
 
     // Fetch available quizzes on component mount
     useEffect(() => {
@@ -27,12 +29,26 @@ const QuizApp = () => {
         const newSocket = io('http://localhost:3000');
         setSocket(newSocket);
         setIsHost(true);
+        setQuizData(quiz);
 
         newSocket.emit('create-room', quiz);
         newSocket.on('room-created', (id) => setRoomId(id));
 
+        newSocket.on('users-count', (count) => {
+            setUsersCount(count);
+        });
+
         newSocket.on('connect_error', (error) => {
             console.error('Connection Error:', error);
+        });
+
+        newSocket.on('question-changed', (questionData) => {
+            setCurrentQuestion(questionData);
+            setSelectedAnswer(null);
+        });
+
+        newSocket.on('answer-submitted', () => {
+            setSelectedAnswer(true);
         });
     };
 
@@ -47,15 +63,24 @@ const QuizApp = () => {
             setQuizData(data.quiz);
         });
 
-        newSocket.on('next-question', (questionData) => {
+        newSocket.on('question-changed', (questionData) => {
             setCurrentQuestion(questionData);
             setSelectedAnswer(null);
+        });
+
+        newSocket.on('connect_error', (error) => {
+            console.error('Connection Error:', error);
         });
     };
 
     const startQuiz = () => {
-        if (socket && isHost) {
-            socket.emit('start-quiz', roomId);
+        if (socket && isHost && quizData) {
+            setCurrentQuestionIndex(0);
+            setCurrentQuestion(quizData.questions[0]);
+            socket.emit('start-quiz', { 
+                roomId,
+                question: quizData.questions[0]
+            });
         }
     };
 
@@ -63,6 +88,21 @@ const QuizApp = () => {
         if (socket) {
             setSelectedAnswer(answerIndex);
             socket.emit('submit-answer', { roomId, answerIndex });
+        }
+    };
+
+    const handleNextQuestion = () => {
+        if (socket && isHost && quizData) {
+            const nextIndex = currentQuestionIndex + 1;
+            if (nextIndex < quizData.questions.length) {
+                setCurrentQuestionIndex(nextIndex);
+                setCurrentQuestion(quizData.questions[nextIndex]);
+                setSelectedAnswer(null);
+                socket.emit('next-question', { 
+                    roomId, 
+                    question: quizData.questions[nextIndex] 
+                });
+            }
         }
     };
 
@@ -111,15 +151,21 @@ const QuizApp = () => {
                 <div className="mt-4">
                     <p>Room ID: {roomId}</p>
                     {isHost && (
-                        <Button onClick={startQuiz} className="bg-purple-500 text-white p-2 rounded">
-                            Start Quiz
-                        </Button>
+                        <>
+                            <p className="mt-2">Players in room: {usersCount}</p>
+                            <Button 
+                                onClick={startQuiz} 
+                                className="bg-purple-500 text-white p-2 rounded mt-2"
+                            >
+                                Start Quiz
+                            </Button>
+                        </>
                     )}
                 </div>
             )}
 
             {/* Render the current question and its options */}
-            {currentQuestion ? (
+            {currentQuestion && (
                 <div>
                     <h2 className="text-xl mb-4">{currentQuestion.question}</h2>
                     <div className="space-y-2">
@@ -128,16 +174,25 @@ const QuizApp = () => {
                                 key={index}
                                 onClick={() => submitAnswer(index)}
                                 disabled={selectedAnswer !== null}
-                                className={`w-full p-2 rounded ${selectedAnswer === index ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                                    }`}
+                                className={`w-full p-2 rounded ${
+                                    selectedAnswer === index ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                                }`}
                             >
                                 {option.option}
                             </button>
                         ))}
                     </div>
+                    
+                    {/* Modified Next Question button to show for host regardless of answers */}
+                    {isHost && (
+                        <Button 
+                            onClick={handleNextQuestion}
+                            className="mt-4 bg-green-500 text-white p-2 rounded"
+                        >
+                            Next Question
+                        </Button>
+                    )}
                 </div>
-            ) : (
-                <p>No question available. Please wait for the next question.</p>
             )}
 
         </div>
