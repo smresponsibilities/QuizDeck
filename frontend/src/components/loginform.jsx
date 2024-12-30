@@ -26,6 +26,9 @@ export default function LoginForm() {
 
   return (
     <div>
+      <Link to="/" className="inline-block mb-6 text-gray-600 hover:text-gray-800">
+        ← Back to Home
+      </Link>
       <h2 className="text-3xl font-bold text-gray-800 mb-4">Login</h2>
       <form className="flex flex-col gap-5">
         <div className="">
