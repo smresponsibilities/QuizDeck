@@ -1,22 +1,28 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function LoginForm() {
   const [email, setemail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     console.log('Login attempt:', { email, password })
-    const response = await axios.post("http://localhost:3000/user/signin", {
-      email,
-      password
-    });
-    console.log(response);
-    localStorage.setItem('token', response.data.data);
-    // Here you would typically send the login data to your backend
+    try {
+      const response = await axios.post("http://localhost:3000/user/signin", {
+        email,
+        password
+      });
+      console.log(response);
+      localStorage.setItem('token', response.data.data);
+      navigate('/test'); // Navigate after successful login
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   }
 
   const togglePasswordVisibility = () => {
@@ -25,11 +31,14 @@ export default function LoginForm() {
 
   return (
     <div>
+      <Link to="/" className="inline-block mb-6 text-gray-600 hover:text-gray-800">
+        ← Back to Home
+      </Link>
       <h2 className="text-3xl font-bold text-gray-800 mb-4">Login</h2>
       <form className="flex flex-col gap-5">
         <div className="">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            email
+            Email
           </label>
           <input
             id="email"
@@ -85,6 +94,12 @@ export default function LoginForm() {
           </button>
         </div>
       </form>
+      <p className="text-center mt-6 text-gray-600">
+        Don't have an account?{' '}
+        <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+          Sign up
+        </Link>
+      </p>
     </div>
   )
 }
