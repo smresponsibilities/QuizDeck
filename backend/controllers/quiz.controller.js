@@ -8,9 +8,9 @@ export const createQuizHandler = async (req, res) => {
     const quiz = req.body.questions;
     const title = req.body.quizname;
     const user = req.user;
-    console.log(quiz);
-    console.log(title);
-    console.log(user);
+    // console.log(quiz);
+    // console.log(title);
+    // console.log(user);
 
     const savedQuiz = await Quiz.create({
       quizname: title,

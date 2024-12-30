@@ -42,6 +42,10 @@ export const initSocketService = (server) => {
 
     socket.on("next-question", (data) => handleNextQuestion(socket, io, data));
 
+    socket.on("end-quiz", (data)=>{
+      io.to(data.roomId).emit('quiz-ended', data);
+    })
+
     socket.on("disconnect", () => handleDisconnect(socket, io));
   });
 

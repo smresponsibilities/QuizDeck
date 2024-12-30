@@ -54,9 +54,10 @@ export const handleStartQuiz = (socket, io, { roomId, question }) => {
   }
 };
 
-export const handleSubmitAnswer = (socket, io, { roomId, answerId }) => {
+export const handleSubmitAnswer = (socket, io, { roomId, answerIndex }) => {
   try {
-    const result = submitAnswer(roomId, socket.id, answerId);
+    console.log("Answer submitted:", answerIndex);
+    const result = submitAnswer(roomId, socket.id, answerIndex);
 
     const rooms = getRooms();
     const hostSocketId = rooms[roomId]?.host;
@@ -64,6 +65,7 @@ export const handleSubmitAnswer = (socket, io, { roomId, answerId }) => {
       const hostSocket = io.sockets.sockets.get(hostSocketId);
       hostSocket?.emit("player-answered", result);
     }
+    socket.emit("answer-submitted", result);
   } catch (error) {
     console.error("Error submitting answer:", error.message);
     socket.emit("answer-error", { message: error.message });

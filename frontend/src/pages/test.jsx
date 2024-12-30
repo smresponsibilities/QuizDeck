@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
 const QuizApp = () => {
+    const [score, setScore] = useState(0);
     const [socket, setSocket] = useState(null);
     const [roomId, setRoomId] = useState('');
     const [isHost, setIsHost] = useState(false);
@@ -14,7 +15,6 @@ const QuizApp = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [usersCount, setUsersCount] = useState(0);
 
-    // Fetch available quizzes on component mount
     useEffect(() => {
         axios.get('http://localhost:3000/quiz/user', {
             headers: {
@@ -77,7 +77,7 @@ const QuizApp = () => {
         if (socket && isHost && quizData) {
             setCurrentQuestionIndex(0);
             setCurrentQuestion(quizData.questions[0]);
-            socket.emit('start-quiz', { 
+            socket.emit('start-quiz', {
                 roomId,
                 question: quizData.questions[0]
             });
@@ -88,6 +88,11 @@ const QuizApp = () => {
         if (socket) {
             setSelectedAnswer(answerIndex);
             socket.emit('submit-answer', { roomId, answerIndex });
+            socket.on('answer-submitted', (result) => {
+                if (result.isCorrect) {
+                    setScore(score + 1);
+                }
+            });
         }
     };
 
@@ -98,15 +103,18 @@ const QuizApp = () => {
                 setCurrentQuestionIndex(nextIndex);
                 setCurrentQuestion(quizData.questions[nextIndex]);
                 setSelectedAnswer(null);
-                socket.emit('next-question', { 
-                    roomId, 
-                    question: quizData.questions[nextIndex] 
+                socket.emit('next-question', {
+                    roomId,
+                    question: quizData.questions[nextIndex]
                 });
+            }
+            if (nextIndex >= quizData.questions.length) {
+                socket.emit('end-quiz', { roomId });
+
             }
         }
     };
 
-    // Clean up the socket connection on component unmount
     useEffect(() => {
         return () => {
             if (socket) {
@@ -119,7 +127,6 @@ const QuizApp = () => {
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Quiz App</h1>
 
-            {/* Display list of quizzes for the host to choose from */}
             {!roomId && quizzes.map((quiz) => (
                 <div key={quiz._id} className="border p-4 rounded mb-4 flex justify-between">
                     <div>
@@ -130,7 +137,6 @@ const QuizApp = () => {
                 </div>
             ))}
 
-            {/* Input for joining a quiz room */}
             {!quizData && (
                 <div className="mt-4">
                     <input
@@ -146,15 +152,14 @@ const QuizApp = () => {
                 </div>
             )}
 
-            {/* Display room ID and start quiz button for host */}
             {roomId && !currentQuestion && (
                 <div className="mt-4">
                     <p>Room ID: {roomId}</p>
                     {isHost && (
                         <>
                             <p className="mt-2">Players in room: {usersCount}</p>
-                            <Button 
-                                onClick={startQuiz} 
+                            <Button
+                                onClick={startQuiz}
                                 className="bg-purple-500 text-white p-2 rounded mt-2"
                             >
                                 Start Quiz
@@ -164,9 +169,9 @@ const QuizApp = () => {
                 </div>
             )}
 
-            {/* Render the current question and its options */}
             {currentQuestion && (
                 <div>
+                    <h3 className="text-lg font-bold mb-2">{score}</h3>
                     <h2 className="text-xl mb-4">{currentQuestion.question}</h2>
                     <div className="space-y-2">
                         {currentQuestion.options.map((option, index) => (
@@ -174,18 +179,16 @@ const QuizApp = () => {
                                 key={index}
                                 onClick={() => submitAnswer(index)}
                                 disabled={selectedAnswer !== null}
-                                className={`w-full p-2 rounded ${
-                                    selectedAnswer === index ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                                }`}
+                                className={`w-full p-2 rounded ${selectedAnswer === index ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                                    }`}
                             >
                                 {option.option}
                             </button>
                         ))}
                     </div>
-                    
-                    {/* Modified Next Question button to show for host regardless of answers */}
+
                     {isHost && (
-                        <Button 
+                        <Button
                             onClick={handleNextQuestion}
                             className="mt-4 bg-green-500 text-white p-2 rounded"
                         >
