@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
+import { Link } from 'react-router-dom'
 
 export default function LoginForm() {
   const [email, setemail] = useState('')
@@ -29,7 +30,7 @@ export default function LoginForm() {
       <form className="flex flex-col gap-5">
         <div className="">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            email
+            Email
           </label>
           <input
             id="email"
@@ -85,6 +86,12 @@ export default function LoginForm() {
           </button>
         </div>
       </form>
+      <p className="text-center mt-6 text-gray-600">
+        Don't have an account?{' '}
+        <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+          Sign up
+        </Link>
+      </p>
     </div>
   )
 }
