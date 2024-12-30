@@ -96,7 +96,7 @@ export const handleEndQuiz = (socket, io, data) => {
   leaderboard.sort((a, b) => b.score - a.score);
   if (hostSocketId) {
     const hostSocket = io.sockets.sockets.get(hostSocketId);
-    hostSocket?.emit("quiz-ended");
+    hostSocket?.to(roomId).emit("quiz-ended");
   }
   io.to(roomId).emit("quiz-ended", leaderboard);
   deleteRoom(roomId);

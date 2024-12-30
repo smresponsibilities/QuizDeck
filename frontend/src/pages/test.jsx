@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
 
 const QuizApp = () => {
@@ -15,137 +15,136 @@ const QuizApp = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [quizEnded, setQuizEnded] = useState(false);
     const [usersCount, setUsersCount] = useState(0);
-    const [leaderBoard, setLeaderBoard] = useState([]);
+    const [leaderBoard, setLeaderBoard] = useState(null);
 
+    // Fetch quizzes on initial load
     useEffect(() => {
-        axios.get('http://localhost:3000/quiz/user', {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-        })
-            .then((response) => setQuizzes(response.data.data))
-            .catch((error) => console.error('Error fetching quizzes:', error));
+        const fetchQuizzes = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/quiz/user', {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                });
+                setQuizzes(response.data.data);
+            } catch (error) {
+                console.error('Error fetching quizzes:', error);
+            }
+        };
+        fetchQuizzes();
     }, []);
 
-    const createQuizRoom = (quiz) => {
-        const newSocket = io('http://localhost:3000');
+    // Cleanup socket on component unmount
+    useEffect(() => {
+        return () => {
+            if (socket) socket.disconnect();
+        };
+    }, [socket]);
+
+    // Initialize socket connection and setup common listeners
+    const initializeSocket = (newSocket) => {
         setSocket(newSocket);
+
+        newSocket.on('users-count', setUsersCount);
+
+        newSocket.on('question-changed', (questionData) => {
+            setCurrentQuestion(questionData);
+            setSelectedAnswer(null);
+        });
+
+        newSocket.on('quiz-ended', (leaderboard) => {
+            setLeaderBoard(Array.isArray(leaderboard) ? leaderboard : []);
+            setQuizEnded(true);
+        });
+
+        newSocket.on('connect_error', (error) => console.error('Connection Error:', error));
+    };
+
+    const createQuizRoom = useCallback((quiz) => {
+        const newSocket = io('http://localhost:3000');
+        initializeSocket(newSocket);
         setIsHost(true);
         setQuizData(quiz);
 
         newSocket.emit('create-room', quiz);
-        newSocket.on('room-created', (id) => setRoomId(id));
+        newSocket.on('room-created', setRoomId);
+    }, []);
 
-        newSocket.on('users-count', (count) => {
-            setUsersCount(count);
-        });
+    const joinQuizRoom = useCallback(() => {
+        if (!roomId.trim()) return;
 
-        newSocket.on('connect_error', (error) => {
-            console.error('Connection Error:', error);
-        });
-
-        newSocket.on('question-changed', (questionData) => {
-            setCurrentQuestion(questionData);
-            setSelectedAnswer(null);
-        });
-
-        newSocket.on('answer-submitted', () => {
-            setSelectedAnswer(true);
-        });
-    };
-
-    const joinQuizRoom = () => {
         const newSocket = io('http://localhost:3000');
-        setSocket(newSocket);
+        initializeSocket(newSocket);
         setIsHost(false);
 
         newSocket.emit('join-room', roomId);
-
-        newSocket.on('join-successful', (data) => {
-            setQuizData(data.quiz);
-        });
-
-        newSocket.on('question-changed', (questionData) => {
-            setCurrentQuestion(questionData);
-            setSelectedAnswer(null);
-        });
-
-        newSocket.on('connect_error', (error) => {
-            console.error('Connection Error:', error);
-        });
-    };
+        newSocket.on('join-successful', (data) => setQuizData(data.quiz));
+    }, [roomId]);
 
     const startQuiz = () => {
         if (socket && isHost && quizData) {
+            const firstQuestion = quizData.questions[0];
+            setCurrentQuestion(firstQuestion);
             setCurrentQuestionIndex(0);
-            setCurrentQuestion(quizData.questions[0]);
-            socket.emit('start-quiz', {
-                roomId,
-                question: quizData.questions[0]
-            });
+            socket.emit('start-quiz', { roomId, question: firstQuestion });
         }
     };
 
     const submitAnswer = (answerIndex) => {
-        if (socket) {
-            setSelectedAnswer(answerIndex);
-            socket.emit('submit-answer', { roomId, answerIndex });
-            socket.on('answer-submitted', (result) => {
-                if (result.isCorrect) {
-                    setScore(score + 1);
-                }
-            });
-        }
+        if (!socket || selectedAnswer !== null) return;
+
+        setSelectedAnswer(answerIndex);
+        socket.emit('submit-answer', { roomId, answerIndex });
+
+        socket.once('answer-submitted', (result) => {
+            if (result.isCorrect) {
+                setScore((prevScore) => prevScore + 1);
+            }
+        });
     };
 
     const handleNextQuestion = () => {
-        if (socket && isHost && quizData) {
-            const nextIndex = currentQuestionIndex + 1;
-            if (nextIndex < quizData.questions.length) {
-                setCurrentQuestionIndex(nextIndex);
-                setCurrentQuestion(quizData.questions[nextIndex]);
-                setSelectedAnswer(null);
-                socket.emit('next-question', {
-                    roomId,
-                    question: quizData.questions[nextIndex]
-                });
-            }
-            if (nextIndex >= quizData.questions.length) {
-                socket.emit('end-quiz', { roomId });
-                socket.on('quiz-ended', (leaderboard) => {
-                    console.log('Leaderboard:', leaderboard);
-                    setLeaderBoard(leaderboard);
-                });
-                setQuizEnded(true);
-            }
+        if (!socket || !isHost || !quizData) return;
+
+        const nextIndex = currentQuestionIndex + 1;
+        const hasMoreQuestions = nextIndex < quizData.questions.length;
+
+        if (hasMoreQuestions) {
+            const nextQuestion = quizData.questions[nextIndex];
+            setCurrentQuestion(nextQuestion);
+            setCurrentQuestionIndex(nextIndex);
+            setSelectedAnswer(null);
+            socket.emit('next-question', { roomId, question: nextQuestion });
+        } else {
+            socket.emit('end-quiz', { roomId });
         }
     };
 
-    useEffect(() => {
-        return () => {
-            if (socket) {
-                socket.disconnect();
-            }
-        };
-    }, [socket]);
+    const renderLeaderboard = () => {
+        if (!leaderBoard) return <p>Loading leaderboard...</p>;
+        if (leaderBoard.length === 0) return <p>No leaderboard data available.</p>;
+
+        return (
+            <ul>
+                {leaderBoard.map((player, index) => (
+                    <li key={index}>
+                        {player.playerId}: {player.score}
+                    </li>
+                ))}
+            </ul>
+        );
+    };
 
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Quiz App</h1>
-            {quizEnded && leaderBoard.length > 0 &&
+
+            {quizEnded && (
                 <div>
                     <h2>Quiz Ended</h2>
                     <p>Your score: {score}</p>
-                    Leaderboard:
-                    {console.log("lll" ,leaderBoard)}
-                    <ul>
-                        {leaderBoard.map((player, index) => (
-                            <li key={index}>
-                                {player.playerId}: {player.score}
-                            </li>
-                        ))}
-                    </ul>
-                </div>}
+                    <h3>Leaderboard:</h3>
+                    {renderLeaderboard()}
+                </div>
+            )}
 
             {!roomId && quizzes.map((quiz) => (
                 <div key={quiz._id} className="border p-4 rounded mb-4 flex justify-between">
@@ -191,7 +190,7 @@ const QuizApp = () => {
 
             {!quizEnded && currentQuestion && (
                 <div>
-                    <h3 className="text-lg font-bold mb-2">{score}</h3>
+                    <h3 className="text-lg font-bold mb-2">Score: {score}</h3>
                     <h2 className="text-xl mb-4">{currentQuestion.question}</h2>
                     <div className="space-y-2">
                         {currentQuestion.options.map((option, index) => (
@@ -199,8 +198,11 @@ const QuizApp = () => {
                                 key={index}
                                 onClick={() => submitAnswer(index)}
                                 disabled={selectedAnswer !== null}
-                                className={`w-full p-2 rounded ${selectedAnswer === index ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                                    }`}
+                                className={`w-full p-2 rounded ${
+                                    selectedAnswer === index
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-200'
+                                }`}
                             >
                                 {option.option}
                             </button>
@@ -217,7 +219,6 @@ const QuizApp = () => {
                     )}
                 </div>
             )}
-
         </div>
     );
 };
