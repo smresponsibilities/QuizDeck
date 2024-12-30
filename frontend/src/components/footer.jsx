@@ -1,12 +1,9 @@
 export default function Footer() {
   return (
-    <div className="inset-x-0 bottom-0 flex flex-col items-center justify-center gap-1 bg-black p-3">
-      <p className="text-white">Row 1</p>
-      <p className="text-white">Row 2</p>
-      <p className="text-white">Row 3</p>
-      <p className="text-white">Row 4</p>
-      <p className="text-white">Row 5</p>
-      <p className="text-white">Row 6</p>
+    <div className="bg-gray-800 text-white py-8">
+      <div className="container mx-auto text-center">
+        <p>&copy; 2024 QuizDeck. All rights reserved.</p>
+      </div>
     </div>
   );
 }
