@@ -13,7 +13,9 @@ const QuizApp = () => {
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [quizEnded, setQuizEnded] = useState(false);
     const [usersCount, setUsersCount] = useState(0);
+    const [leaderBoard, setLeaderBoard] = useState([]);
 
     useEffect(() => {
         axios.get('http://localhost:3000/quiz/user', {
@@ -110,7 +112,11 @@ const QuizApp = () => {
             }
             if (nextIndex >= quizData.questions.length) {
                 socket.emit('end-quiz', { roomId });
-
+                socket.on('quiz-ended', (leaderboard) => {
+                    console.log('Leaderboard:', leaderboard);
+                    setLeaderBoard(leaderboard);
+                });
+                setQuizEnded(true);
             }
         }
     };
@@ -126,6 +132,20 @@ const QuizApp = () => {
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Quiz App</h1>
+            {quizEnded && leaderBoard.length > 0 &&
+                <div>
+                    <h2>Quiz Ended</h2>
+                    <p>Your score: {score}</p>
+                    Leaderboard:
+                    {console.log("lll" ,leaderBoard)}
+                    <ul>
+                        {leaderBoard.map((player, index) => (
+                            <li key={index}>
+                                {player.playerId}: {player.score}
+                            </li>
+                        ))}
+                    </ul>
+                </div>}
 
             {!roomId && quizzes.map((quiz) => (
                 <div key={quiz._id} className="border p-4 rounded mb-4 flex justify-between">
@@ -169,7 +189,7 @@ const QuizApp = () => {
                 </div>
             )}
 
-            {currentQuestion && (
+            {!quizEnded && currentQuestion && (
                 <div>
                     <h3 className="text-lg font-bold mb-2">{score}</h3>
                     <h2 className="text-xl mb-4">{currentQuestion.question}</h2>

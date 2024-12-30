@@ -35,7 +35,7 @@ export const handleJoinRoom = (socket, io, roomId) => {
         playerId: socket.id,
         playerCount: rooms[roomId].players.length,
       });
-      io.to(roomId).emit('users-count', rooms[roomId].players.length);
+      io.to(roomId).emit("users-count", rooms[roomId].players.length);
     }
 
     socket.emit("join-successful", { roomId, quiz: quizInfo });
@@ -47,7 +47,7 @@ export const handleJoinRoom = (socket, io, roomId) => {
 
 export const handleStartQuiz = (socket, io, { roomId, question }) => {
   try {
-    io.to(roomId).emit('question-changed', question);
+    io.to(roomId).emit("question-changed", question);
   } catch (error) {
     console.error("Error starting quiz:", error.message);
     socket.emit("quiz-error", { message: error.message });
@@ -74,11 +74,32 @@ export const handleSubmitAnswer = (socket, io, { roomId, answerIndex }) => {
 
 export const handleNextQuestion = (socket, io, { roomId, question }) => {
   try {
-    io.to(roomId).emit('question-changed', question);
+    io.to(roomId).emit("question-changed", question);
   } catch (error) {
     console.error("Error progressing to next question:", error.message);
     socket.emit("quiz-error", { message: error.message });
   }
+};
+
+export const handleEndQuiz = (socket, io, data) => {
+  const { roomId } = data;
+  const rooms = getRooms();
+  const hostSocketId = rooms[roomId]?.host;
+  //leaderboard
+  const room = rooms[roomId];
+  const scores = room.scores;
+  const players = room.players;
+  const leaderboard = players.map((playerId) => ({
+    playerId,
+    score: scores[playerId],
+  }));
+  leaderboard.sort((a, b) => b.score - a.score);
+  if (hostSocketId) {
+    const hostSocket = io.sockets.sockets.get(hostSocketId);
+    hostSocket?.emit("quiz-ended");
+  }
+  io.to(roomId).emit("quiz-ended", leaderboard);
+  deleteRoom(roomId);
 };
 
 export const handleDisconnect = (socket, io) => {

@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import {
   handleCreateRoom,
   handleDisconnect,
+  handleEndQuiz,
   handleJoinRoom,
   handleNextQuestion,
   handleStartQuiz,
@@ -43,7 +44,7 @@ export const initSocketService = (server) => {
     socket.on("next-question", (data) => handleNextQuestion(socket, io, data));
 
     socket.on("end-quiz", (data)=>{
-      io.to(data.roomId).emit('quiz-ended', data);
+      handleEndQuiz(socket, io, data);
     })
 
     socket.on("disconnect", () => handleDisconnect(socket, io));
