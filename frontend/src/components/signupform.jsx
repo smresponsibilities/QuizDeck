@@ -1,10 +1,11 @@
 import axios from "axios";
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -12,16 +13,17 @@ export default function SignUpForm() {
 
   const signupHandler = async (e) => {
     e.preventDefault();
-    const username = e.target.username.value;
-    const email = e.target.email.value;
-    const password = e.target.password.value;
-
-    const response = await axios.post("http://localhost:3000/user/signup", {
-      username,
-      email,
-      password,
-    });
-    console.log(response);
+    try {
+      const response = await axios.post("http://localhost:3000/user/signup", {
+        username: e.target.username.value,
+        email: e.target.email.value,
+        password: e.target.password.value,
+      });
+      console.log(response);
+      navigate('/test'); // Navigate after successful signup
+    } catch (error) {
+      console.error('Signup failed:', error);
+    }
   };
 
   return (

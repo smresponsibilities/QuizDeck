@@ -1,23 +1,28 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function LoginForm() {
   const [email, setemail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     console.log('Login attempt:', { email, password })
-    const response = await axios.post("http://localhost:3000/user/signin", {
-      email,
-      password
-    });
-    console.log(response);
-    localStorage.setItem('token', response.data.data);
-    // Here you would typically send the login data to your backend
+    try {
+      const response = await axios.post("http://localhost:3000/user/signin", {
+        email,
+        password
+      });
+      console.log(response);
+      localStorage.setItem('token', response.data.data);
+      navigate('/test'); // Navigate after successful login
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   }
 
   const togglePasswordVisibility = () => {
