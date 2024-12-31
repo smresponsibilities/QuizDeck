@@ -24,7 +24,7 @@ export const handleCreateRoom = (socket, io, quizData) => {
 
 export const handleJoinRoom = (socket, io, roomId) => {
   try {
-    const quizInfo = joinRoom(roomId, socket.id);
+    const quizInfo = joinRoom(roomId, socket.id, socket);
     socket.join(roomId);
 
     const rooms = getRooms();
@@ -32,7 +32,7 @@ export const handleJoinRoom = (socket, io, roomId) => {
     if (hostSocketId) {
       const hostSocket = io.sockets.sockets.get(hostSocketId);
       hostSocket?.emit("player-joined", {
-        playerId: socket.id,
+        playerId: socket.username || socket.id,
         playerCount: rooms[roomId].players.length,
       });
       io.to(roomId).emit("users-count", rooms[roomId].players.length);
@@ -57,7 +57,7 @@ export const handleStartQuiz = (socket, io, { roomId, question }) => {
 export const handleSubmitAnswer = (socket, io, { roomId, answerIndex }) => {
   try {
     console.log("Answer submitted:", answerIndex);
-    const result = submitAnswer(roomId, socket.id, answerIndex);
+    const result = submitAnswer(roomId, socket.id, answerIndex, socket);
 
     const rooms = getRooms();
     const hostSocketId = rooms[roomId]?.host;

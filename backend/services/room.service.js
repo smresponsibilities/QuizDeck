@@ -19,7 +19,7 @@ export const createRoom = (hostId, quizData) => {
   return roomId;
 };
 
-export const joinRoom = (roomId, playerId) => {
+export const joinRoom = (roomId, playerId, socket) => {
   const room = quizRooms[roomId];
 
   if (!room) {
@@ -30,10 +30,12 @@ export const joinRoom = (roomId, playerId) => {
     throw new Error("Quiz has already started");
   }
 
-  room.players.push(playerId);
-  room.scores[playerId] = 0;
+  const playerIdentifier = socket.username || playerId;
 
-  console.log(`Player ${playerId} joined room ${roomId}`);
+  room.players.push(playerIdentifier);
+  room.scores[playerIdentifier] = 0;
+
+  console.log(`Player ${playerIdentifier} joined room ${roomId}`);
   return {
     quizname: room.quiz.quizname,
     totalQuestions: room.quiz.questions.length,
@@ -56,7 +58,7 @@ export const startQuiz = (roomId, hostId) => {
   return room.quiz.questions[room.currentQuestionIndex];
 };
 
-export const submitAnswer = (roomId, playerId, answerIndex) => {
+export const submitAnswer = (roomId, playerId, answerIndex, socket) => {
   const room = quizRooms[roomId];
 
   if (!room) {
@@ -64,15 +66,15 @@ export const submitAnswer = (roomId, playerId, answerIndex) => {
   }
 
   const currentQuestion = room.quiz.questions[room.currentQuestionIndex];
-
+  const playerIdentifier = socket.username || playerId;
   const isCorrect = currentQuestion.options[answerIndex]?.isAnswer;
 
   if (isCorrect) {
-    room.scores[playerId] += 1;
+    room.scores[playerIdentifier] += 1;
   }
 
   return {
-    playerId,
+    playerId: playerIdentifier,
     answerIndex,
     isCorrect,
   };

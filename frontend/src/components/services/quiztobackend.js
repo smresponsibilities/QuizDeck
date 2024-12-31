@@ -4,7 +4,7 @@ export async function SaveQuizHandler(e) {
   try {
     console.log(e);
     const response = await axios.post(
-      "http://localhost:3000/quiz/createquiz",
+      `${import.meta.env.VITE_BASEURL}/quiz/createquiz`,
       {
         quizname: e.quizname,
         questions: e.questions,

@@ -2,9 +2,17 @@ import axios from "axios";
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { addUserFormSchema } from "./validators/userTypes";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignUpForm() {
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    username: '',
+    email: '',
+    password: '',
+  });
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -13,21 +21,56 @@ export default function SignUpForm() {
 
   const signupHandler = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post("http://localhost:3000/user/signup", {
-        username: e.target.username.value,
-        email: e.target.email.value,
-        password: e.target.password.value,
-      });
-      console.log(response);
-      navigate('/test'); // Navigate after successful signup
-    } catch (error) {
-      console.error('Signup failed:', error);
+    const username = e.target.username.value;
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    const validationResult = addUserFormSchema.safeParse({
+      email,
+      username,
+      password,
+    });
+
+    if (!validationResult.success) {
+      const formattedErrors = validationResult.error.issues.reduce((acc, issue) => {
+        acc[issue.path[0]] = issue.message;
+        return acc;
+      }, {});
+      setErrors(formattedErrors);
+    } else {
+      setErrors({ username: '', email: '', password: '' });
+      try {
+        const response = await axios.post(`${import.meta.env.VITE_BASEURL}/user/signup`, {
+          username,
+          email,
+          password,
+        });
+        if (response.data.success) {
+          toast({
+            title: 'Signup successful',
+            description: 'You have successfully signed up.',
+            variant: 'success',
+          })
+          navigate('/quiz'); // Navigate after successful signup
+        } else {
+          console.error('Signup failed:', response.data.error);
+          toast.error(response.data.error);
+          // Handle client-side errors here
+        }
+      } catch (error) {
+        toast({
+          title: 'Signup failed',
+          description: 'An error occurred while signing up. Please try again later.',
+          variant: 'destructive',
+        })
+        console.error('Signup failed:', error);
+        // Handle server-side errors here
+      }
     }
   };
 
   return (
-    <div>
+    <div >
       <Link to="/" className="inline-block mb-6 text-gray-600 hover:text-gray-800">
         ← Back to Home
       </Link>
@@ -41,10 +84,12 @@ export default function SignUpForm() {
             type="text"
             id="username"
             name="username"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.username ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Enter your username"
             required
           />
+          {errors.username && <p className="mt-1 text-xs text-red-500">{errors.username}</p>}
         </div>
 
         <div>
@@ -55,10 +100,12 @@ export default function SignUpForm() {
             type="email"
             id="email"
             name="email"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Enter your email"
             required
           />
+          {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
         </div>
 
         <div>
@@ -70,7 +117,8 @@ export default function SignUpForm() {
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
               placeholder="Create a password"
               required
             />
@@ -87,6 +135,7 @@ export default function SignUpForm() {
               )}
             </button>
           </div>
+          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
         </div>
 
         <div className="flex justify-between items-center mt-4">
@@ -113,3 +162,4 @@ export default function SignUpForm() {
     </div>
   );
 }
+

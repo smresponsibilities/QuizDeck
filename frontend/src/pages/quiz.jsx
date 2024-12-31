@@ -1,11 +1,11 @@
 import QuestionForm from "../components/questionform.jsx";
 
 export default function Quiz() {
-    return (
-      <div className="align-center flex h-screen justify-center py-20">
-
-          <QuestionForm />
-
+  return (
+    <div className="min-h-screen py-8 px-4">
+      <div className="container mx-auto">
+        <QuestionForm />
       </div>
-    );
-  }
+    </div>
+  );
+}

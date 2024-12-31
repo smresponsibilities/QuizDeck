@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
+import { meta } from '@eslint/js'
 
 export default function LoginForm() {
   const [email, setemail] = useState('')
@@ -13,13 +14,14 @@ export default function LoginForm() {
     e.preventDefault()
     console.log('Login attempt:', { email, password })
     try {
-      const response = await axios.post("http://localhost:3000/user/signin", {
+      console.log(import.meta.env.VITE_BASEURL);
+      const response = await axios.post(`${import.meta.env.VITE_BASEURL}/user/signin`, {
         email,
         password
       });
       console.log(response);
       localStorage.setItem('token', response.data.data);
-      navigate('/test'); // Navigate after successful login
+      navigate('/quiz'); // Navigate after successful login
     } catch (error) {
       console.error('Login failed:', error);
     }

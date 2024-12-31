@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
+import { useNavigate } from 'react-router-dom'
+import { jwtDecode } from 'jwt-decode'
 
 const QuizApp = () => {
+
     const [score, setScore] = useState(0)
     const [socket, setSocket] = useState(null)
     const [roomId, setRoomId] = useState('')
@@ -21,11 +23,12 @@ const QuizApp = () => {
     const [usersCount, setUsersCount] = useState(0)
     const [leaderBoard, setLeaderBoard] = useState(null)
     const { toast } = useToast()
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchQuizzes = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/quiz/user', {
+                const response = await axios.get(`${import.meta.env.VITE_BASEURL}/quiz/user`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
                 })
                 setQuizzes(response.data.data)
@@ -48,6 +51,12 @@ const QuizApp = () => {
     }, [socket])
 
     const initializeSocket = (newSocket) => {
+        // Get token if it exists
+        const token = localStorage.getItem('token');
+        if (token) {
+            newSocket.auth = { token };
+        }
+
         setSocket(newSocket)
 
         newSocket.on('users-count', setUsersCount)
@@ -77,7 +86,7 @@ const QuizApp = () => {
     }
 
     const createQuizRoom = (quiz) => {
-        const newSocket = io('http://localhost:3000')
+        const newSocket = io(`${import.meta.env.VITE_BASEURL}`)
         initializeSocket(newSocket)
         setIsHost(true)
         setQuizData(quiz)
@@ -95,7 +104,7 @@ const QuizApp = () => {
     const joinQuizRoom = () => {
         if (!roomId.trim()) return
 
-        const newSocket = io('http://localhost:3000')
+        const newSocket = io(`${import.meta.env.VITE_BASEURL}`)
         initializeSocket(newSocket)
         setIsHost(false)
 
@@ -192,11 +201,40 @@ const QuizApp = () => {
                             <p className="text-xl text-center">Your score: {score}</p>
                             <h3 className="text-xl font-semibold">Leaderboard:</h3>
                             {renderLeaderboard()}
+                            <div className="flex justify-center mt-4">
+                                <Button
+                                    onClick={() => {
+                                        setScore(0);
+                                        setSocket(null);
+                                        setRoomId('');
+                                        setIsHost(false);
+                                        setQuizData(null);
+                                        setCurrentQuestion(null);
+                                        setSelectedAnswer(null);
+                                        setCurrentQuestionIndex(0);
+                                        setQuizEnded(false);
+                                        setUsersCount(0);
+                                        setLeaderBoard(null);
+                                        navigate('/quiz');
+                                    }}
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                >
+                                    Back to Quizzes
+                                </Button>
+                            </div>
                         </div>
                     )}
 
                     {!roomId && (
                         <div className="space-y-4">
+                            <div className="flex justify-end mb-4">
+                                <Button
+                                    onClick={() => navigate('/createquiz')}
+                                    className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                                >
+                                    Create New Quiz
+                                </Button>
+                            </div>
                             {quizzes.map((quiz) => (
                                 <Card key={quiz._id} className="p-4">
                                     <div className="flex justify-between items-center">
@@ -258,7 +296,7 @@ const QuizApp = () => {
                                         disabled={selectedAnswer !== null}
                                         className={`p-4 h-auto text-left justify-start ${selectedAnswer === index
                                             ? 'bg-primary text-primary-foreground'
-                                            : `${['bg-red-500', 'bg-green-500', 'bg-blue-500', 'bg-yellow-500'][index]} text-white hover:opacity-90`
+                                            : `${['bg-quizRed hover:bg-quizRedDark', 'bg-quizBlue hover:bg-quizBlueDark', 'bg-quizYellow hover:bg-quizYellowDark', 'bg-quizGreen hover:bg-quizGreenDark'][index]} text-white transition-colors`
                                             }`}
                                     >
                                         {option.option}
@@ -280,7 +318,6 @@ const QuizApp = () => {
                     )}
                 </CardContent>
             </Card>
-            <Toaster />
         </div>
     )
 }

@@ -8,6 +8,7 @@ import {
   handleStartQuiz,
   handleSubmitAnswer,
 } from "../controllers/socket.controller.js";
+import jwt from "jsonwebtoken";
 
 /**
  * Initializes the socket.io service
@@ -26,9 +27,23 @@ export const initSocketService = (server) => {
     },
   });
 
+  // Add middleware to extract username from token
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.username = decoded.username; // Store username in socket
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
+    }
+    next();
+  });
+
   // Handle client connections
   io.on("connection", (socket) => {
-    console.log("Client connected:", socket.id);
+    console.log("Client connected:", socket.username || socket.id);
 
     // Socket event handlers
     socket.on("create-room", (quizData) =>
@@ -43,9 +58,9 @@ export const initSocketService = (server) => {
 
     socket.on("next-question", (data) => handleNextQuestion(socket, io, data));
 
-    socket.on("end-quiz", (data)=>{
+    socket.on("end-quiz", (data) => {
       handleEndQuiz(socket, io, data);
-    })
+    });
 
     socket.on("disconnect", () => handleDisconnect(socket, io));
   });
