@@ -8,6 +8,7 @@ import {
   removePlayerFromRoom,
   startQuiz,
   submitAnswer,
+  nextQuestion,
 } from "../services/room.service.js";
 
 export const handleCreateRoom = (socket, io, quizData) => {
@@ -28,15 +29,25 @@ export const handleJoinRoom = (socket, io, roomId) => {
     socket.join(roomId);
 
     const rooms = getRooms();
-    const hostSocketId = rooms[roomId]?.host;
-    if (hostSocketId) {
-      const hostSocket = io.sockets.sockets.get(hostSocketId);
-      hostSocket?.emit("player-joined", {
-        playerId: socket.username || socket.id,
-        playerCount: rooms[roomId].players.length,
-      });
-      io.to(roomId).emit("users-count", rooms[roomId].players.length);
-    }
+    const room = rooms[roomId];
+    if (!room) return;
+
+    // Create players info with names and count
+    const playersInfo = {
+      count: room.players.length,
+      players: room.players, // This will be the array of playerIdentifiers (usernames or socket.ids)
+    };
+
+    // Emit to host
+    const hostSocket = io.sockets.sockets.get(room.host);
+    hostSocket?.emit("player-joined", {
+      playerId: socket.username || socket.id,
+      playerCount: room.players.length,
+      players: room.players,
+    });
+
+    // Emit to all players in room
+    io.to(roomId).emit("users-count", playersInfo);
 
     socket.emit("join-successful", { roomId, quiz: quizInfo });
   } catch (error) {
@@ -56,7 +67,6 @@ export const handleStartQuiz = (socket, io, { roomId, question }) => {
 
 export const handleSubmitAnswer = (socket, io, { roomId, answerIndex }) => {
   try {
-    console.log("Answer submitted:", answerIndex);
     const result = submitAnswer(roomId, socket.id, answerIndex, socket);
 
     const rooms = getRooms();
@@ -74,7 +84,16 @@ export const handleSubmitAnswer = (socket, io, { roomId, answerIndex }) => {
 
 export const handleNextQuestion = (socket, io, { roomId, question }) => {
   try {
-    io.to(roomId).emit("question-changed", question);
+    // Call nextQuestion to update the index and get the next question
+    const nextQuestionData = nextQuestion(roomId, socket.id);
+
+    if (nextQuestionData === null) {
+      // Quiz has ended, handle end of quiz
+      handleEndQuiz(socket, io, { roomId });
+    } else {
+      // Emit the next question to all players
+      io.to(roomId).emit("question-changed", nextQuestionData);
+    }
   } catch (error) {
     console.error("Error progressing to next question:", error.message);
     socket.emit("quiz-error", { message: error.message });

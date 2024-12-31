@@ -15,7 +15,6 @@ export async function SaveQuizHandler(e) {
         },
       },
     );
-    console.log(response);
   } catch (error) {
     console.error(error);
   }

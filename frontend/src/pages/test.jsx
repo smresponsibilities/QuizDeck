@@ -21,6 +21,7 @@ const QuizApp = () => {
     const [quizEnded, setQuizEnded] = useState(false)
     const [usersCount, setUsersCount] = useState(0)
     const [leaderBoard, setLeaderBoard] = useState(null)
+    const [players, setPlayers] = useState([])
     const { toast } = useToast()
     const navigate = useNavigate()
 
@@ -58,7 +59,10 @@ const QuizApp = () => {
 
         setSocket(newSocket)
 
-        newSocket.on('users-count', setUsersCount)
+        newSocket.on('users-count', (data) => {
+            setUsersCount(data.count);
+            setPlayers(data.players);
+        });
 
         newSocket.on('question-changed', (questionData) => {
             setCurrentQuestion(questionData)
@@ -264,8 +268,21 @@ const QuizApp = () => {
                     )}
 
                     {roomId && !currentQuestion && (
-                        <div className="mt-4 text-center">
-                            <p className="text-lg">Room ID: <span className="font-semibold">{roomId}</span></p>
+                        <div className="space-y-4">
+                            <div className="p-4 bg-secondary/10 rounded-lg">
+                                <h3 className="text-lg font-semibold mb-2">Room ID: {roomId}</h3>
+                                <p className="text-sm text-gray-600">Players joined: {usersCount}</p>
+                                <div className="mt-2">
+                                    {players.map((player, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-block bg-primary/10 text-primary px-2 py-1 rounded mr-2 mb-2 text-sm"
+                                        >
+                                            {player}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                             {isHost && (
                                 <>
                                     <p className="mt-2 text-lg">Players in room: <span className="font-semibold">{usersCount}</span></p>

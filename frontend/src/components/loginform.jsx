@@ -12,14 +12,11 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Login attempt:', { email, password })
     try {
-      console.log(import.meta.env.VITE_BASEURL);
       const response = await axios.post(`${import.meta.env.VITE_BASEURL}/user/signin`, {
         email,
         password
       });
-      console.log(response);
       localStorage.setItem('token', response.data.data);
       navigate('/quiz'); // Navigate after successful login
     } catch (error) {

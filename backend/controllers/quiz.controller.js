@@ -4,14 +4,9 @@ import { ApiResponse } from "../utils/apiResponse.js";
 
 export const createQuizHandler = async (req, res) => {
   try {
-    // console.log(req.body);
     const quiz = req.body.questions;
     const title = req.body.quizname;
     const user = req.user;
-    // console.log(quiz);
-    // console.log(title);
-    // console.log(user);
-
     const savedQuiz = await Quiz.create({
       quizname: title,
       questions: quiz,

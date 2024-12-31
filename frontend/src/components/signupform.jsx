@@ -46,6 +46,7 @@ export default function SignUpForm() {
           password,
         });
         if (response.data.success) {
+          localStorage.setItem('token', response.data.data.token);
           toast({
             title: 'Signup successful',
             description: 'You have successfully signed up.',
