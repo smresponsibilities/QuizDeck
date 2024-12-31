@@ -27,6 +27,8 @@
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+    --success:, 145 63% 49%;
+    --success-foreground:, 0 0% 100%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 10% 3.9%;
@@ -38,6 +40,8 @@
     --radius: 0.5rem;
   }
   .dark {
+    --success:, 145 63% 49%;
+    --success-foreground:, 0 0% 100%;
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;

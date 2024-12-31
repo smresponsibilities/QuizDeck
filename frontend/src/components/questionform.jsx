@@ -107,7 +107,7 @@ export default function QuizCreator() {
       toast({
         title: "Success",
         description: "Quiz saved successfully!",
-        variant: "default"
+        variant: "success"
       })
     } catch (error) {
       toast({
